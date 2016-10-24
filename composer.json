@@ -1,0 +1,18 @@
+{
+    "name": "rocket-internet-berlin/ROCKETLABSBLOOMFILTER",
+    "description": "Implementation of bloom filter",
+    "authors": [
+        {
+            "name": "Igor Veremchuk",
+            "email": "igor.veremchuk@gmail.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^4.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "RocketLabs\\": "src/"
+        }
+    }
+}
