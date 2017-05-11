@@ -1,10 +1,10 @@
 {
-    "name": "rocket-internet-berlin/ROCKETLABSBLOOMFILTER",
+    "name": "rocket-labs/bloom-filter",
     "description": "Implementation of bloom filter",
     "authors": [
         {
             "name": "Igor Veremchuk",
-            "email": "igor.veremchuk@gmail.com"
+            "email": "igor.veremchuk@rocket-internet.de"
         }
     ],
     "require-dev": {
