@@ -5,45 +5,46 @@ namespace RocketLabs\BloomFilter\Hash;
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-class Murmur implements Hash
+class Murmur implements HashInterface
 {
     /**
      * @inheritdoc
      */
-    public function hash($value)
+    public function generate($value)
     {
-        $m = 0x5bd1e995;
-        $r = 24;
-        $seed = 0;
-        $len = strlen($value);
-        $h = $seed ^ $len;
-        $o = 0;
-
-        while($len >= 4) {
-            $k = ord($value[$o]) | (ord($value[$o+1]) << 8) | (ord($value[$o+2]) << 16) | (ord($value[$o+3]) << 24);
-            $k = ($k * $m) & 4294967295;
-            $k = ($k ^ ($k >> $r)) & 4294967295;
-            $k = ($k * $m) & 4294967295;
-
-            $h = ($h * $m) & 4294967295;
-            $h = ($h ^ $k) & 4294967295;
-
-            $o += 4;
-            $len -= 4;
+        $value  = array_values(unpack('C*',(string) $value));
+        $klen = count($value);
+        $h1 = 0;
+        for ($i=0,$bytes=$klen-($remainder=$klen&3) ; $i<$bytes ; ) {
+            $k1 = $value[$i]
+                | ($value[++$i] << 8)
+                | ($value[++$i] << 16)
+                | ($value[++$i] << 24);
+            ++$i;
+            $k1  = (((($k1 & 0xffff) * 0xcc9e2d51) + ((((($k1 >= 0 ? $k1 >> 16 : (($k1 & 0x7fffffff) >> 16) | 0x8000)) * 0xcc9e2d51) & 0xffff) << 16))) & 0xffffffff;
+            $k1  = $k1 << 15 | ($k1 >= 0 ? $k1 >> 17 : (($k1 & 0x7fffffff) >> 17) | 0x4000);
+            $k1  = (((($k1 & 0xffff) * 0x1b873593) + ((((($k1 >= 0 ? $k1 >> 16 : (($k1 & 0x7fffffff) >> 16) | 0x8000)) * 0x1b873593) & 0xffff) << 16))) & 0xffffffff;
+            $h1 ^= $k1;
+            $h1  = $h1 << 13 | ($h1 >= 0 ? $h1 >> 19 : (($h1 & 0x7fffffff) >> 19) | 0x1000);
+            $h1b = (((($h1 & 0xffff) * 5) + ((((($h1 >= 0 ? $h1 >> 16 : (($h1 & 0x7fffffff) >> 16) | 0x8000)) * 5) & 0xffff) << 16))) & 0xffffffff;
+            $h1  = ((($h1b & 0xffff) + 0x6b64) + ((((($h1b >= 0 ? $h1b >> 16 : (($h1b & 0x7fffffff) >> 16) | 0x8000)) + 0xe654) & 0xffff) << 16));
         }
-
-        $data = substr($value,0 - $len,$len);
-
-        switch($len) {
-            case 3: $h = ($h ^ (ord($data[2]) << 16)) & 4294967295;
-            case 2: $h = ($h ^ (ord($data[1]) << 8)) & 4294967295;
-            case 1: $h = ($h ^ (ord($data[0]))) & 4294967295;
-                $h = ($h * $m) & 4294967295;
-        };
-        $h = ($h ^ ($h >> 13)) & 4294967295;
-        $h = ($h * $m) & 4294967295;
-        $h = ($h ^ ($h >> 15)) & 4294967295;
-
-        return $h;
+        $k1 = 0;
+        switch ($remainder) {
+            case 3: $k1 ^= $value[$i + 2] << 16;
+            case 2: $k1 ^= $value[$i + 1] << 8;
+            case 1: $k1 ^= $value[$i];
+                $k1  = ((($k1 & 0xffff) * 0xcc9e2d51) + ((((($k1 >= 0 ? $k1 >> 16 : (($k1 & 0x7fffffff) >> 16) | 0x8000)) * 0xcc9e2d51) & 0xffff) << 16)) & 0xffffffff;
+                $k1  = $k1 << 15 | ($k1 >= 0 ? $k1 >> 17 : (($k1 & 0x7fffffff) >> 17) | 0x4000);
+                $k1  = ((($k1 & 0xffff) * 0x1b873593) + ((((($k1 >= 0 ? $k1 >> 16 : (($k1 & 0x7fffffff) >> 16) | 0x8000)) * 0x1b873593) & 0xffff) << 16)) & 0xffffffff;
+                $h1 ^= $k1;
+        }
+        $h1 ^= $klen;
+        $h1 ^= ($h1 >= 0 ? $h1 >> 16 : (($h1 & 0x7fffffff) >> 16) | 0x8000);
+        $h1  = ((($h1 & 0xffff) * 0x85ebca6b) + ((((($h1 >= 0 ? $h1 >> 16 : (($h1 & 0x7fffffff) >> 16) | 0x8000)) * 0x85ebca6b) & 0xffff) << 16)) & 0xffffffff;
+        $h1 ^= ($h1 >= 0 ? $h1 >> 13 : (($h1 & 0x7fffffff) >> 13) | 0x40000);
+        $h1  = (((($h1 & 0xffff) * 0xc2b2ae35) + ((((($h1 >= 0 ? $h1 >> 16 : (($h1 & 0x7fffffff) >> 16) | 0x8000)) * 0xc2b2ae35) & 0xffff) << 16))) & 0xffffffff;
+        $h1 ^= ($h1 >= 0 ? $h1 >> 16 : (($h1 & 0x7fffffff) >> 16) | 0x8000);
+        return $h1;
     }
 }

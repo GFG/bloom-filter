@@ -13,8 +13,8 @@ class MurmurTest extends \PHPUnit_Framework_TestCase
     {
         $hash = new Murmur();
         $value = 'test value';
-        $expected = 932882152;
+        $expected = 3804435892;
 
-        $this->assertEquals($expected, $hash->hash($value));
+        $this->assertEquals($expected, $hash->generate($value));
     }
 }

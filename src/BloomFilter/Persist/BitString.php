@@ -5,10 +5,9 @@ namespace RocketLabs\BloomFilter\Persist;
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-class BitString implements Persister
+class BitString implements PersisterInterface
 {
-    const BITS_IN_BYTE = 8;
-    const DEFAULT_SIZE = 1024;
+    const DEFAULT_BYTE_SIZE = 1024;
 
     /** @var string */
     private $bytes;
@@ -22,7 +21,7 @@ class BitString implements Persister
      */
     public static function createFromString($str)
     {
-        $instance = new self();
+        $instance = new static();
         $instance->bytes = $str;
         $instance->size = strlen($str);
         return $instance;
@@ -30,7 +29,7 @@ class BitString implements Persister
 
     public function __construct()
     {
-        $this->size = self::DEFAULT_SIZE;
+        $this->size = self::DEFAULT_BYTE_SIZE;
         $this->bytes = str_repeat(chr(0), $this->size);
     }
 
@@ -64,9 +63,8 @@ class BitString implements Persister
     {
         $byte = $this->offsetToByte($bit);
         $byte = ord($this->bytes[$byte]);
-        $bit = (bool) ($this->bitPos($bit) & $byte);
 
-        return (int) $bit;
+        return ($byte >> $bit % 8) & 1;
     }
 
     /**
@@ -76,18 +74,9 @@ class BitString implements Persister
     {
         $offsetByte = $this->offsetToByte($bit);
         $byte = ord($this->bytes[$offsetByte]);
-        $pos = $this->bitPos($bit);
 
-        $byte |= $pos;
+        $byte |= 1 << $bit % 8;
         $this->bytes[$offsetByte] = chr($byte);
-    }
-
-    /**
-     * @return string
-     */
-    public function toString()
-    {
-        return $this->bytes;
     }
 
     /**
@@ -95,7 +84,7 @@ class BitString implements Persister
      */
     private function assertOffset($value)
     {
-        if (!is_int($value)) {
+        if (!is_numeric($value)) {
             throw new \UnexpectedValueException('Value must be an integer.');
         }
 
@@ -111,22 +100,13 @@ class BitString implements Persister
     private function offsetToByte($offset)
     {
         $this->assertOffset($offset);
-        $byte = (int) floor($offset / self::BITS_IN_BYTE);
+        $byte = $offset >> 0x3;
 
         if ($this->size <= $byte) {
-            $this->bytes .= str_repeat(chr(0), $byte - $this->size + self::DEFAULT_SIZE);
+            $this->bytes .= str_repeat(chr(0), $byte - $this->size + self::DEFAULT_BYTE_SIZE);
             $this->size = strlen($this->bytes);
         }
 
         return $byte;
-    }
-
-    /**
-     * @param int $offset
-     * @return int
-     */
-    private function bitPos($offset)
-    {
-        return (int) pow(2, $offset % self::BITS_IN_BYTE);
     }
 }

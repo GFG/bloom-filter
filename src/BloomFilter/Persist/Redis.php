@@ -5,7 +5,7 @@ namespace RocketLabs\BloomFilter\Persist;
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-class Redis implements Persister
+class Redis implements PersisterInterface
 {
     const DEFAULT_HOST = 'localhost';
     const DEFAULT_PORT = 6379;
@@ -99,7 +99,7 @@ class Redis implements Persister
      */
     private function assertOffset($value)
     {
-        if (!is_int($value)) {
+        if (!is_numeric($value)) {
             throw new \UnexpectedValueException('Value must be an integer.');
         }
 
