@@ -9,6 +9,8 @@ that is used to test whether an element is a member of a set (False positive mat
 
 use \RocketLabs\BloomFilter\Persist\Redis;
 use \RocketLabs\BloomFilter\BloomFilter;
+use \RocketLabs\BloomFilter\Hash\Murmur;
+use \RocketLabs\BloomFilter\Persist\BitString;
 
 $setToStore = [
     'Test string 1',
@@ -18,11 +20,25 @@ $setToStore = [
     'Test string 5',
 ];
 
-$filter = BloomFilter::createFromApproximateSize(
-    Redis::create(),
-    count($setToStore),
-    0.001
+$redisParams = [
+    'host' => 'localhost',
+    'port' => 6379,
+    'db' => 0,
+    'key' => 'bloom_filter',
+];
+$persisterRedis = Redis::create($redisParams);
+$persisterInRam = new BitString();
+
+# Create via factory method
+$filter = BloomFilter::createFromSetSize(
+    $persisterRedis,
+    new Murmur(),
+    count($setToStore)
 );
+
+# Create via constructor and init after that
+$filter = new BloomFilter(Redis::create(), new Murmur());
+$filter->init(count($setToStore));
 
 foreach ($setToStore as $string) {
     $filter->add($string);

@@ -5,7 +5,7 @@ namespace RocketLabs\BloomFilter\Persist;
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-interface Persister
+interface PersisterInterface
 {
     /**
      * @param array $bits

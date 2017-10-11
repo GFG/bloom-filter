@@ -3,37 +3,11 @@
 namespace RocketLabs\BloomFilter\Test\Hash;
 
 use RocketLabs\BloomFilter\BloomFilter;
+use RocketLabs\BloomFilter\Hash\Murmur;
 use RocketLabs\BloomFilter\Persist\Redis;
 
 class BloomFilterTest extends \PHPUnit_Framework_TestCase
 {
-    /**
-     * @test
-     */
-    public function optimalBitSize()
-    {
-        $n = 100; // Number fo items
-        $p = 0.001; // Probability of false positives
-
-        $this->assertEquals(
-            round((($n * log($p)) / pow(log(2), 2)) * -1),
-            BloomFilter::optimalBitSize($n, $p)
-        );
-    }
-
-    /**
-     * @test
-     */
-    public function optimalHashCount()
-    {
-        $n = 100; // Number fo items
-        $m = 1024; // Number fo bits
-
-        $this->assertEquals(
-            (int) round(($n / $m) * log(2)),
-            BloomFilter::optimalHashCount($m, $n)
-        );
-    }
 
     /**
      * @param int $size
@@ -42,28 +16,29 @@ class BloomFilterTest extends \PHPUnit_Framework_TestCase
      * @param int $expectedBitSize
      *
      * @test
-     * @dataProvider createFromApproximateSizeDataProvider
+     * @dataProvider createBloomFilterDataProvider
      */
-    public function createFromApproximateSize($size, $probability, $expectedHashSize, $expectedBitSize)
+    public function createBloomFilter($size, $probability, $expectedHashSize, $expectedBitSize)
     {
         $redisMock = $this->getMock(\Redis::class);
         $persister = new Redis($redisMock, Redis::DEFAULT_KEY);
+        $hash = new Murmur();
 
         $class = new \ReflectionClass("RocketLabs\\BloomFilter\\BloomFilter");
-        $propertyHashes = $class->getProperty('hashes');
-        $propertySize = $class->getProperty('size');
+        $propertyHashes = $class->getProperty('hashCount');
+        $propertyBitSize = $class->getProperty('bitSize');
         $propertyHashes->setAccessible(true);
-        $propertySize->setAccessible(true);
-        $filter = BloomFilter::createFromApproximateSize($persister, $size, $probability);
+        $propertyBitSize->setAccessible(true);
+        $filter = new BloomFilter($persister, $hash, $size, $probability);
 
-        $this->assertEquals($expectedHashSize, count($propertyHashes->getValue($filter)));
-        $this->assertEquals($expectedBitSize, $propertySize->getValue($filter));
+        $this->assertEquals($expectedHashSize, $propertyHashes->getValue($filter));
+        $this->assertEquals($expectedBitSize, $propertyBitSize->getValue($filter));
     }
 
     /**
      * @return array
      */
-    public function createFromApproximateSizeDataProvider()
+    public function createBloomFilterDataProvider()
     {
         return [
             'Size: 100, probability: 99.9%' => [
@@ -98,13 +73,18 @@ class BloomFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function addToFilter()
     {
-        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\Persister');
+        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
+        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $hash->expects($this->exactly(3))
+            ->method('generate')
+            ->will( $this->onConsecutiveCalls(42, 1000, 10048));
+
         $persister->expects($this->once())
             ->method('setBulk')
             ->willReturn(1)
-            ->with([687, 549, 684]); //calculated bits for hashes
+            ->with([42, 1000, 232]); //calculated bits for hashes
 
-        $filter = new BloomFilter($persister, 1024, 3);
+        $filter = new BloomFilter($persister, $hash, 1024, 0.1);
         $filter->add('testString');
     }
 
@@ -113,13 +93,18 @@ class BloomFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function addBulkFilter()
     {
-        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\Persister');
+        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
+        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $hash->expects($this->exactly(9))
+            ->method('generate')
+            ->will( $this->onConsecutiveCalls(42, 43, 44, 1, 2, 3, 10001, 10002, 10003));
+
         $persister->expects($this->once())
             ->method('setBulk')
             ->willReturn(1)
-            ->with([ 572, 177, 442, 128, 451, 157, 905, 698, 186]); //calculated bits for hashes
+            ->with([42, 43, 44, 1, 2, 3, 185, 186, 187]); //calculated bits for hashes
 
-        $filter = new BloomFilter($persister, 1024, 3);
+        $filter = new BloomFilter($persister, $hash, 1024, 0.1);
         $filter->addBulk(
             ['test String 1',
             'test String 2',
@@ -133,20 +118,26 @@ class BloomFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function existsInFilter()
     {
-        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\Persister');
+        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
+
+        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $hash->expects($this->any())
+            ->method('generate')
+            ->will( $this->onConsecutiveCalls(42, 1000, 10001, 42, 1000, 10001));
+
         $persister->expects($this->once())
             ->method('setBulk')
             ->willReturn(1)
-            ->with([687, 549, 684]); //calculated bits for hashes
+            ->with([42, 1000, 185]); //calculated bits for hashes
         $persister->expects($this->once())
             ->method('getBulk')
             ->willReturn([1, 1, 1])
-            ->with([687, 549, 684]); //calculated bits for hashes
+            ->with([42, 1000, 185]); //calculated bits for hashes
 
-        $filterForSet = new BloomFilter($persister, 1024, 3);
+        $filterForSet = new BloomFilter($persister, $hash, 1024, 0.1);
         $filterForSet->add('testString');
 
-        $filterForGet = new BloomFilter($persister, 1024, 3);
+        $filterForGet = new BloomFilter($persister, $hash, 1024, 0.1);
         $this->assertTrue($filterForGet->has('testString'));
     }
 
@@ -155,20 +146,25 @@ class BloomFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function DoesNotExistInFilter()
     {
-        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\Persister');
+        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
         $persister->expects($this->once())
             ->method('setBulk')
             ->willReturn(1)
-            ->with([1008, 193, 573]); //calculated bits for hashes
+            ->with([42, 1000, 232]); //calculated bits for hashes
         $persister->expects($this->once())
             ->method('getBulk')
             ->willReturn([1, 0, 1])
-            ->with([682, 79, 401]); //calculated bits for hashes
+            ->with([43, 1001, 233]); //calculated bits for hashes
 
-        $filterForSet = new BloomFilter($persister, 1024, 3);
+        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $hash->expects($this->exactly(6))
+            ->method('generate')
+            ->will( $this->onConsecutiveCalls(42, 1000, 10048, 43, 1001, 10049));
+
+        $filterForSet = new BloomFilter($persister, $hash, 1024, 0.1);
         $filterForSet->add('test String');
 
-        $filterForGet = new BloomFilter($persister, 1024, 3);
+        $filterForGet = new BloomFilter($persister, $hash, 1024, 0.1);
         $this->assertFalse($filterForGet->has('Not Existing test String'));
     }
 }

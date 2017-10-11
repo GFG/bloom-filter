@@ -5,11 +5,11 @@ namespace RocketLabs\BloomFilter\Hash;
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-interface Hash
+interface HashInterface
 {
     /**
      * @param $value
      * @return string
      */
-    public function hash($value);
+    public function generate($value);
 }

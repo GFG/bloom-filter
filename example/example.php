@@ -3,6 +3,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use RocketLabs\BloomFilter\Persist\Redis;
 use RocketLabs\BloomFilter\BloomFilter;
+use RocketLabs\BloomFilter\DynamicBloomFilter;
+use RocketLabs\BloomFilter\Hash\Murmur;
 use RocketLabs\BloomFilter\Persist\BitString;
 
 function microtime_float()
@@ -18,7 +20,6 @@ $redis = new \Redis();
 $redis->connect(REDIS_HOST, REDIS_PORT);
 $redis->setOption(\Redis::OPT_SERIALIZER, \Redis::SERIALIZER_PHP);
 $redis->select(0);
-$redis->del('counting_bloom_filter');
 
 $handle = fopen(__DIR__ . "/data.csv", "r");
 
@@ -28,19 +29,22 @@ while (($data = fgetcsv($handle) ) !== false) {
 $time_start = microtime_float();
 
 $filters = [
-    'Redis' => BloomFilter::createFromApproximateSize(Redis::create(), 10000, 0.001),
-    'BitString' => BloomFilter::createFromApproximateSize(new BitString(), 10000, 0.001),
-    'BitString Jenkins' => BloomFilter::createFromApproximateSize(new BitString(), 10000, 0.001),
-    'BitString Jenkins 3 hash function' => BloomFilter::create(new BitString(), 100000, 3, ['Jenkins']),
-    'BitString Crc32b' => BloomFilter::createFromApproximateSize(new BitString(), 10000, 0.001, ['Crc32b']),
+    'Redis-BloomFilter' => new BloomFilter(Redis::create(), new Murmur(), 1000),
+    'Redis-DynamicBloomFilter' => new DynamicBloomFilter(Redis::create(), new Murmur(), 200),
+    'BitString-BloomFilter' => new BloomFilter(new BitString(), new Murmur(), 1000),
+    'BitString-DynamicBloomFilter' => new DynamicBloomFilter(new BitString(), new Murmur(), 200),
 ];
 
 echo 'Messages: ' . count($messages) . "\n";
 
+/**
+ * @var  string $storage
+ * @var \RocketLabs\BloomFilter\BloomFilterInterface $filter
+ */
 foreach ($filters as $storage => $filter) {
+    $redis->del('bloom_filter');
     //Adding to filter
     $time_start = microtime_float();
-
     $filter->addBulk($messages);
 
     $time_end = microtime_float();

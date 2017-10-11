@@ -19,8 +19,8 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
         $propertyBytes->setAccessible(true);
         $propertySize->setAccessible(true);
 
-        $this->assertEquals(BitString::DEFAULT_SIZE, $propertySize->getValue($persister));
-        $this->assertEquals(BitString::DEFAULT_SIZE, strlen($propertyBytes->getValue($persister)));
+        $this->assertEquals(BitString::DEFAULT_BYTE_SIZE, $propertySize->getValue($persister));
+        $this->assertEquals(BitString::DEFAULT_BYTE_SIZE, strlen($propertyBytes->getValue($persister)));
     }
 
     /**
@@ -34,7 +34,7 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
 
         $allNotSetBitsAreOff = true;
 
-        for ($i = 0; $i < BitString::DEFAULT_SIZE * 8; $i++) {
+        for ($i = 0; $i < BitString::DEFAULT_BYTE_SIZE * 8; $i++) {
             if ($i == 100) {
                 continue;
             }
@@ -53,7 +53,7 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
         $persister = new BitString();
         $allNotSetBitsAreOff = true;
 
-        for ($i = 0; $i < BitString::DEFAULT_SIZE * 8; $i++) {
+        for ($i = 0; $i < BitString::DEFAULT_BYTE_SIZE * 8; $i++) {
             $allNotSetBitsAreOff = $persister->get($i) == 0 && $allNotSetBitsAreOff;
         }
 
@@ -119,8 +119,8 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
         $propertyBytes->setAccessible(true);
         $propertySize->setAccessible(true);
 
-        $bit = BitString::DEFAULT_SIZE * 8 * 3 + 2;
-        $increasedSize =  BitString::DEFAULT_SIZE * 3 + BitString::DEFAULT_SIZE;
+        $bit = BitString::DEFAULT_BYTE_SIZE * 8 * 3 + 2;
+        $increasedSize =  BitString::DEFAULT_BYTE_SIZE * 3 + BitString::DEFAULT_BYTE_SIZE;
 
         $persister->set($bit);
         $allNotSetBitsAreOff = true;
