@@ -29,11 +29,13 @@ while (($data = fgetcsv($handle) ) !== false) {
 $time_start = microtime_float();
 
 $filters = [
-    'Redis-BloomFilter' => new BloomFilter(Redis::create(), new Murmur(), 1000),
-    'Redis-DynamicBloomFilter' => new DynamicBloomFilter(Redis::create(), new Murmur(), 200),
-    'BitString-BloomFilter' => new BloomFilter(new BitString(), new Murmur(), 1000),
-    'BitString-DynamicBloomFilter' => new DynamicBloomFilter(new BitString(), new Murmur(), 200),
+    'Redis-BloomFilter' => (new BloomFilter(Redis::create(), new Murmur()))->setSize(1000),
+    'Redis-DynamicBloomFilter' => (new DynamicBloomFilter(Redis::create(), new Murmur()))->setSize(200),
+    'BitString-BloomFilter' => (new BloomFilter(new BitString(), new Murmur()))->setSize(1000),
+    'BitString-DynamicBloomFilter' => (new DynamicBloomFilter(new BitString, new Murmur()))->setSize(200),
 ];
+
+$mementos = [];
 
 echo 'Messages: ' . count($messages) . "\n";
 
