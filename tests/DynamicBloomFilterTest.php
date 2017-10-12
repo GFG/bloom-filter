@@ -36,7 +36,8 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
             ->willReturn(1)
             ->with([44, 44, 44]); //calculated bits for hashes
 
-        $filter = new DynamicBloomFilter($persister, $hash, 3, 0, 0.1);
+        $filter = new DynamicBloomFilter($persister, $hash);
+        $filter->setSize(3)->setFalsePositiveProbability(0.1);
         for($i = 0; $i < 10; $i++) {
             $filter->add('testString');
         }
@@ -53,7 +54,8 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
             ->method('generate')
             ->willReturn(2);
 
-        $filter = new DynamicBloomFilter($persister, $hash, 3, 0, 0.1);
+        $filter = new DynamicBloomFilter($persister, $hash);
+        $filter->setSize(3)->setFalsePositiveProbability(0.1);
         for($i = 0; $i < 10; $i++) {
             $filter->add('testString');
         }
@@ -67,6 +69,34 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
+    public function suspendRestoreFilter()
+    {
+        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
+        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $hash->expects($this->any())
+            ->method('generate')
+            ->willReturn(2);
+
+        $filter = new DynamicBloomFilter($persister, $hash);
+        $filter->setSize(3)->setFalsePositiveProbability(0.1);
+        for($i = 0; $i < 10; $i++) {
+            $filter->add('testString');
+        }
+
+        $persister->expects($this->at(0))->method('getBulk')->willReturn([1, 0, 1])->with([2, 2 , 2]);
+        $persister->expects($this->at(1))->method('getBulk')->willReturn([1, 1, 1])->with([16, 16 , 16]);
+
+        $memento = $filter->suspend();
+
+        $restoredFilter = new DynamicBloomFilter($persister, $hash);
+        $restoredFilter->restore($memento);
+
+        $this->assertTrue($restoredFilter->has('testString'));
+    }
+
+    /**
+     * @test
+     */
     public function doesNotExistsInFilter()
     {
         $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
@@ -75,7 +105,8 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
             ->method('generate')
             ->willReturn(2);
 
-        $filter = new DynamicBloomFilter($persister, $hash, 3, 0, 0.1);
+        $filter = new DynamicBloomFilter($persister, $hash);
+        $filter->setSize(3)->setFalsePositiveProbability(0.1);
         for($i = 0; $i < 10; $i++) {
             $filter->add('testString');
         }

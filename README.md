@@ -29,16 +29,8 @@ $redisParams = [
 $persisterRedis = Redis::create($redisParams);
 $persisterInRam = new BitString();
 
-# Create via factory method
-$filter = BloomFilter::createFromSetSize(
-    $persisterRedis,
-    new Murmur(),
-    count($setToStore)
-);
-
-# Create via constructor and init after that
-$filter = new BloomFilter(Redis::create(), new Murmur());
-$filter->init(count($setToStore));
+$filter = new BloomFilter($persisterRedis, new Murmur());
+$filter->setSize(count($setToStore));
 
 foreach ($setToStore as $string) {
     $filter->add($string);

@@ -14,7 +14,6 @@ class BitString implements PersisterInterface
     /** @var int */
     private $size;
 
-
     /**
      * @param string $str
      * @return BitString
@@ -108,5 +107,13 @@ class BitString implements PersisterInterface
         }
 
         return $byte;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->bytes;
     }
 }

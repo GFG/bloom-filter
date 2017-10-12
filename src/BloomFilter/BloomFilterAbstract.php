@@ -2,6 +2,7 @@
 
 namespace RocketLabs\BloomFilter;
 
+use RocketLabs\BloomFilter\Exception\NotInitialized;
 use RocketLabs\BloomFilter\Hash\HashInterface;
 use RocketLabs\BloomFilter\Persist\PersisterInterface;
 
@@ -10,6 +11,8 @@ use RocketLabs\BloomFilter\Persist\PersisterInterface;
  */
 abstract class BloomFilterAbstract implements BloomFilterInterface
 {
+    const DEFAULT_PROBABILITY = 0.001;
+
     /** @var int */
     protected $bitSize;
     /** @var int */
@@ -24,20 +27,63 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
     protected $falsePositiveProbability;
 
     /**
-     * @param int $setSize
+     * @param PersisterInterface $persister
+     * @param HashInterface $hash
+     */
+    public function __construct(PersisterInterface $persister, HashInterface $hash)
+    {
+        $this->persister = $persister;
+        $this->hash = $hash;
+        $this->falsePositiveProbability = static::DEFAULT_PROBABILITY;
+    }
+
+    /**
+     * @param $setSize
+     * @return $this
      */
     public function setSize($setSize)
     {
         $this->setSize = (int) $setSize;
+        $this->init();
+
+        return $this;
+
     }
 
     /**
-     * @param float $falsePositiveProbability
+     * @param $falsePositiveProbability
+     * @return $this
      */
     public function setFalsePositiveProbability($falsePositiveProbability)
     {
         if ($falsePositiveProbability <= 0 || $falsePositiveProbability >= 1) {
             throw new \RangeException('False positive probability must be between 0 and 1');
+        }
+
+        $this->falsePositiveProbability = $falsePositiveProbability;
+        $this->init();
+
+        return $this;
+
+    }
+
+    /**
+     * @return $this
+     */
+    protected function init()
+    {
+        if (isset($this->setSize) && isset($this->falsePositiveProbability)) {
+            $this->bitSize = $this->getOptimalBitSize($this->setSize, $this->falsePositiveProbability);
+            $this->hashCount = $this->getOptimalHashCount($this->setSize, $this->bitSize);
+        }
+
+        return $this;
+    }
+
+    protected function assertInit()
+    {
+        if (!isset($this->setSize) || !isset($this->falsePositiveProbability)) {
+            throw new NotInitialized(static::class . ' should be initialized' );
         }
     }
 

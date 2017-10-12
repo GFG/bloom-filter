@@ -1,42 +1,24 @@
 <?php
 
 namespace RocketLabs\BloomFilter;
-use RocketLabs\BloomFilter\Hash\HashInterface;
-use RocketLabs\BloomFilter\Persist\PersisterInterface;
 
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-class DynamicBloomFilter extends BloomFilterAbstract
+class DynamicBloomFilter extends BloomFilterAbstract implements RestorableInterface
 {
     /** @var int */
-    protected $currentSetSize;
+    protected $currentSetSize = 0;
 
     /**
-     * @param PersisterInterface $persister
-     * @param HashInterface $hash
-     * @param $setSize
-     * @param int $currentSetSize
-     * @param float $falsePositiveProbability
-     */
-    public function __construct(PersisterInterface $persister, HashInterface $hash, $setSize, $currentSetSize = 0, $falsePositiveProbability = 0.001)
-    {
-        $this->persister = $persister;
-        $this->hash = $hash;
-
-        $this->setCurrentSetSize($currentSetSize);
-        $this->setSize($setSize);
-        $this->setFalsePositiveProbability($falsePositiveProbability);
-        $this->bitSize = $this->getOptimalBitSize((int) $setSize, $falsePositiveProbability);
-        $this->hashCount = $this->getOptimalHashCount($setSize, $this->bitSize);
-    }
-
-    /**
-     * @param int $currentSetSize
+     * @param $currentSetSize
+     * @return $this
      */
     public function setCurrentSetSize($currentSetSize)
     {
         $this->currentSetSize = $currentSetSize;
+
+        return $this;
     }
 
     /**
@@ -44,6 +26,7 @@ class DynamicBloomFilter extends BloomFilterAbstract
      */
     public function add($value)
     {
+        $this->assertInit();
         $this->currentSetSize++;
         $this->persister->setBulk($this->getBits($value, floor($this->currentSetSize / $this->setSize)));
         return $this;
@@ -54,6 +37,7 @@ class DynamicBloomFilter extends BloomFilterAbstract
      */
     public function addBulk(array $valueList)
     {
+        $this->assertInit();
         $bits = [];
         foreach ($valueList as $value) {
             $this->currentSetSize++;
@@ -69,6 +53,7 @@ class DynamicBloomFilter extends BloomFilterAbstract
      */
     public function has($value)
     {
+        $this->assertInit();
         $bloomFilterCount = floor($this->currentSetSize / $this->setSize);
         $result = false;
         $bits = $this->getBits($value);
@@ -92,5 +77,55 @@ class DynamicBloomFilter extends BloomFilterAbstract
         }
 
         return $result;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function suspend(): Memento
+    {
+        $this->assertInit();
+        $memento = new Memento();
+        $memento->setHashClass(get_class($this->hash))
+            ->addParam('set_size', $this->setSize)
+            ->addParam('probability', $this->falsePositiveProbability)
+            ->addParam('current_set_size', $this->currentSetSize);
+
+        return $memento;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function restore(Memento $memento)
+    {
+        $this->checkIntegrity($memento);
+        $this->setSize($memento->getParam('set_size'));
+        $this->setFalsePositiveProbability($memento->getParam('probability'));
+        $this->setCurrentSetSize($memento->getParam('current_set_size'));
+        $this->bitSize = $this->getOptimalBitSize($this->setSize, $this->falsePositiveProbability);
+        $this->hashCount = $this->getOptimalHashCount($this->setSize, $this->bitSize);
+    }
+
+    /**
+     * @param Memento $memento
+     */
+    private function checkIntegrity(Memento $memento)
+    {
+        if ($memento->getHashClass() != get_class($this->hash)) {
+            throw new \RuntimeException('wrong hash class');
+        }
+
+        if ($memento->getParam('set_size') === null) {
+            throw new \RuntimeException('Memento object has not "set_size" parameter');
+        }
+
+        if ($memento->getParam('probability') === null) {
+            throw new \RuntimeException('Memento object has not "probability" parameter');
+        }
+
+        if ($memento->getParam('current_set_size') === null) {
+            throw new \RuntimeException('Memento object has not "current_set_size" parameter');
+        }
     }
 }
