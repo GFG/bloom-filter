@@ -11,10 +11,10 @@ interface BloomFilterInterface
      * @param string $value
      * @return $this
      */
-    public function add($value);
+    public function add(string $value);
 
     /**
-     * @param string[] $valueList
+     * @param array $valueList
      * @return $this
      */
     public function addBulk(array $valueList);
@@ -23,5 +23,5 @@ interface BloomFilterInterface
      * @param string $value
      * @return bool
      */
-    public function has($value);
+    public function has(string $value): bool;
 }

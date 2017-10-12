@@ -30,12 +30,12 @@ if (!$bitStringDynamicBloomFilter->has('new message')) {
 }
 
 //Suspending
-$mementoRedisPersister = $bitStringDynamicBloomFilter->suspend();
+$mementoRedisPersister = $bitStringDynamicBloomFilter->saveState();
 $storedBitString = (string) $bitString;
 
 //Restoring
 $restoredDynamicBloomFilter = new DynamicBloomFilter(BitString::createFromString($storedBitString), new Murmur());
-$restoredDynamicBloomFilter->restore($mementoRedisPersister);
+$restoredDynamicBloomFilter->restoreState($mementoRedisPersister);
 
 //Checking
 foreach ($messages as $message) {

@@ -16,7 +16,7 @@ class Memento
      * @param string $hashClass
      * @return Memento
      */
-    public function setHashClass(string $hashClass): self
+    public function setHashClass(string $hashClass): Memento
     {
         $this->hashClass = $hashClass;
 
@@ -36,7 +36,7 @@ class Memento
      * @param $value
      * @return Memento
      */
-    public function addParam(string $key, $value): self
+    public function addParam(string $key, $value): Memento
     {
         $this->params[$key] = $value;
 

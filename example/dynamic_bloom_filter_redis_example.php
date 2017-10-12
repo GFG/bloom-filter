@@ -43,11 +43,11 @@ if (!$redisDynamicBloomFilter->has('new message')) {
 }
 
 //Suspending
-$mementoRedisPersister = $redisDynamicBloomFilter->suspend();
+$mementoRedisPersister = $redisDynamicBloomFilter->saveState();
 
 //Restoring
 $restoredDynamicBloomFilter = new DynamicBloomFilter(Redis::create(['key' => REDIS_KEY]), new Murmur());
-$restoredDynamicBloomFilter->restore($mementoRedisPersister);
+$restoredDynamicBloomFilter->restoreState($mementoRedisPersister);
 
 //Checking
 foreach ($messages as $message) {

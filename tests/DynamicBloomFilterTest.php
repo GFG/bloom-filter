@@ -2,9 +2,12 @@
 
 namespace RocketLabs\BloomFilter\Test\Hash;
 
+use PHPUnit\Framework\TestCase;
 use RocketLabs\BloomFilter\DynamicBloomFilter;
+use RocketLabs\BloomFilter\Hash\HashInterface;
+use RocketLabs\BloomFilter\Persist\PersisterInterface;
 
-class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
+class DynamicBloomFilterTest extends TestCase
 {
 
     /**
@@ -12,8 +15,8 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function addToDynamicFilter()
     {
-        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
-        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $persister = $this->getMockBuilder(PersisterInterface::class)->getMock();
+        $hash = $this->getMockBuilder(HashInterface::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
             ->willReturn(2);
@@ -48,8 +51,8 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function existsInFilter()
     {
-        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
-        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $persister = $this->getMockBuilder(PersisterInterface::class)->getMock();
+        $hash = $this->getMockBuilder(HashInterface::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
             ->willReturn(2);
@@ -63,7 +66,7 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
         $persister->expects($this->at(0))->method('getBulk')->willReturn([1, 0, 1])->with([2, 2 , 2]);
         $persister->expects($this->at(1))->method('getBulk')->willReturn([1, 1, 1])->with([16, 16 , 16]);
 
-        $this->assertTrue($filter->has('testString'));
+        static::assertTrue($filter->has('testString'));
     }
 
     /**
@@ -71,8 +74,8 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function suspendRestoreFilter()
     {
-        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
-        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $persister = $this->getMockBuilder(PersisterInterface::class)->getMock();
+        $hash = $this->getMockBuilder(HashInterface::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
             ->willReturn(2);
@@ -86,12 +89,12 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
         $persister->expects($this->at(0))->method('getBulk')->willReturn([1, 0, 1])->with([2, 2 , 2]);
         $persister->expects($this->at(1))->method('getBulk')->willReturn([1, 1, 1])->with([16, 16 , 16]);
 
-        $memento = $filter->suspend();
+        $memento = $filter->saveState();
 
         $restoredFilter = new DynamicBloomFilter($persister, $hash);
-        $restoredFilter->restore($memento);
+        $restoredFilter->restoreState($memento);
 
-        $this->assertTrue($restoredFilter->has('testString'));
+        static::assertTrue($restoredFilter->has('testString'));
     }
 
     /**
@@ -99,8 +102,8 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
      */
     public function doesNotExistsInFilter()
     {
-        $persister = $this->getMock('RocketLabs\BloomFilter\Persist\PersisterInterface');
-        $hash = $this->getMock('RocketLabs\BloomFilter\Hash\HashInterface');
+        $persister = $this->getMockBuilder(PersisterInterface::class)->getMock();
+        $hash = $this->getMockBuilder(HashInterface::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
             ->willReturn(2);
@@ -116,6 +119,6 @@ class DynamicBloomFilterTest extends \PHPUnit_Framework_TestCase
         $persister->expects($this->at(2))->method('getBulk')->willReturn([1, 1, 0])->with([30, 30, 30]);
         $persister->expects($this->at(3))->method('getBulk')->willReturn([1, 1, 0])->with([44, 44, 44]);
 
-        $this->assertFalse($filter->has('testString'));
+        static::assertFalse($filter->has('testString'));
     }
 }

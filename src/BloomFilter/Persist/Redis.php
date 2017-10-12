@@ -2,6 +2,8 @@
 
 namespace RocketLabs\BloomFilter\Persist;
 
+use RocketLabs\BloomFilter\Exception\InvalidValue;
+
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
@@ -49,7 +51,15 @@ class Redis implements PersisterInterface
     /**
      * @inheritdoc
      */
-    public function getBulk(array $bits)
+    public function reset()
+    {
+        $this->redis->del($this->key);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getBulk(array $bits): array
     {
         $pipe = $this->redis->pipeline();
 
@@ -79,7 +89,7 @@ class Redis implements PersisterInterface
     /**
      * @inheritdoc
      */
-    public function get($bit)
+    public function get(int $bit): int
     {
         $this->assertOffset($bit);
         return $this->redis->getBit($this->key, $bit);
@@ -88,7 +98,7 @@ class Redis implements PersisterInterface
     /**
      * @inheritdoc
      */
-    public function set($bit)
+    public function set(int $bit)
     {
         $this->assertOffset($bit);
         $this->redis->setBit($this->key, $bit, 1);
@@ -97,14 +107,10 @@ class Redis implements PersisterInterface
     /**
      * @param int $value
      */
-    private function assertOffset($value)
+    private function assertOffset(int $value)
     {
-        if (!is_numeric($value)) {
-            throw new \UnexpectedValueException('Value must be an integer.');
-        }
-
         if ($value < 0) {
-            throw new \RangeException('Value must be greater than zero.');
+            throw new InvalidValue('Value must be greater than zero.');
         }
     }
 

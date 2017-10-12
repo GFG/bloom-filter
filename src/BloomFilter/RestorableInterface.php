@@ -10,10 +10,10 @@ interface RestorableInterface
     /**
      * @return Memento
      */
-    public function suspend(): Memento;
+    public function saveState(): Memento;
 
     /**
      * @param Memento $memento
      */
-    public function restore(Memento $memento);
+    public function restoreState(Memento $memento);
 }

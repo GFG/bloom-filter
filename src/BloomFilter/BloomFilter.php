@@ -2,6 +2,8 @@
 
 namespace RocketLabs\BloomFilter;
 
+use RocketLabs\BloomFilter\Exception\CannotRestore;
+
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
@@ -10,7 +12,7 @@ class BloomFilter extends BloomFilterAbstract implements RestorableInterface
     /**
      * @inheritdoc
      */
-    public function add($value)
+    public function add(string $value)
     {
         $this->assertInit();
         $this->persister->setBulk($this->getBits($value));
@@ -37,7 +39,7 @@ class BloomFilter extends BloomFilterAbstract implements RestorableInterface
     /**
      * @inheritdoc
      */
-    public function has($value)
+    public function has(string $value): bool
     {
         $this->assertInit();
         $bits = $this->persister->getBulk($this->getBits($value));
@@ -48,7 +50,7 @@ class BloomFilter extends BloomFilterAbstract implements RestorableInterface
     /**
      * @inheritdoc
      */
-    public function suspend(): Memento
+    public function saveState(): Memento
     {
         $this->assertInit();
         $memento = new Memento();
@@ -62,7 +64,7 @@ class BloomFilter extends BloomFilterAbstract implements RestorableInterface
     /**
      * @inheritdoc
      */
-    public function restore(Memento $memento)
+    public function restoreState(Memento $memento)
     {
         $this->checkIntegrity($memento);
         $this->setSize($memento->getParam('set_size'));
@@ -77,15 +79,15 @@ class BloomFilter extends BloomFilterAbstract implements RestorableInterface
     private function checkIntegrity(Memento $memento)
     {
         if ($memento->getHashClass() != get_class($this->hash)) {
-            throw new \RuntimeException('wrong hash class');
+            throw new CannotRestore('Memento object should have same hash class as object');
         }
 
         if ($memento->getParam('set_size') === null) {
-            throw new \RuntimeException('Memento object has not "set_size" parameter');
+            throw new CannotRestore('Memento object has not "set_size" parameter');
         }
 
         if ($memento->getParam('probability') === null) {
-            throw new \RuntimeException('Memento object has not "probability" parameter');
+            throw new CannotRestore('Memento object has not "probability" parameter');
         }
     }
 }

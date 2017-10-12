@@ -2,9 +2,10 @@
 
 namespace RocketLabs\BloomFilter\Test\Hash;
 
+use PHPUnit\Framework\TestCase;
 use RocketLabs\BloomFilter\Hash\Murmur;
 
-class MurmurTest extends \PHPUnit_Framework_TestCase
+class MurmurTest extends TestCase
 {
     /**
      * @test
@@ -15,6 +16,6 @@ class MurmurTest extends \PHPUnit_Framework_TestCase
         $value = 'test value';
         $expected = 3804435892;
 
-        $this->assertEquals($expected, $hash->generate($value));
+        static::assertEquals($expected, $hash->generate($value));
     }
 }
