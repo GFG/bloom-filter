@@ -3,11 +3,12 @@
 namespace RocketLabs\BloomFilter\Test\Persist;
 
 
+use PHPUnit\Framework\TestCase;
 use RocketLabs\BloomFilter\Hash\Murmur;
 use RocketLabs\BloomFilter\Hash\Murmur as AnotherHash;
 use RocketLabs\BloomFilter\Memento;
 
-class MementoTest extends \PHPUnit_Framework_TestCase
+class MementoTest extends TestCase
 {
 
     /**
@@ -17,7 +18,7 @@ class MementoTest extends \PHPUnit_Framework_TestCase
     {
         $memento = new Memento();
         $memento->setHashClass(Murmur::class);
-        self::assertEquals(AnotherHash::class, $memento->getHashClass());
+        static::assertEquals(AnotherHash::class, $memento->getHashClass());
     }
 
     /**

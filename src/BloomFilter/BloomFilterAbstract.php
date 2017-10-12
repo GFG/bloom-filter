@@ -2,6 +2,7 @@
 
 namespace RocketLabs\BloomFilter;
 
+use RocketLabs\BloomFilter\Exception\InvalidValue;
 use RocketLabs\BloomFilter\Exception\NotInitialized;
 use RocketLabs\BloomFilter\Hash\HashInterface;
 use RocketLabs\BloomFilter\Persist\PersisterInterface;
@@ -38,10 +39,11 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
     }
 
     /**
-     * @param $setSize
-     * @return $this
+     * @param int $setSize
+     *
+     * @return BloomFilterInterface
      */
-    public function setSize($setSize)
+    public function setSize(int $setSize): BloomFilterInterface
     {
         $this->setSize = (int) $setSize;
         $this->init();
@@ -51,13 +53,14 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
     }
 
     /**
-     * @param $falsePositiveProbability
-     * @return $this
+     * @param float $falsePositiveProbability
+     *
+     * @return BloomFilterInterface
      */
-    public function setFalsePositiveProbability($falsePositiveProbability)
+    public function setFalsePositiveProbability(float $falsePositiveProbability): BloomFilterInterface
     {
         if ($falsePositiveProbability <= 0 || $falsePositiveProbability >= 1) {
-            throw new \RangeException('False positive probability must be between 0 and 1');
+            throw new InvalidValue('False positive probability must be between 0 and 1');
         }
 
         $this->falsePositiveProbability = $falsePositiveProbability;
@@ -68,9 +71,9 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
     }
 
     /**
-     * @return $this
+     * @return BloomFilterInterface
      */
-    protected function init()
+    protected function init(): BloomFilterInterface
     {
         if (isset($this->setSize) && isset($this->falsePositiveProbability)) {
             $this->bitSize = $this->getOptimalBitSize($this->setSize, $this->falsePositiveProbability);
@@ -83,7 +86,7 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
     protected function assertInit()
     {
         if (!isset($this->setSize) || !isset($this->falsePositiveProbability)) {
-            throw new NotInitialized(static::class . ' should be initialized' );
+            throw new NotInitialized(static::class . ' should be initialized');
         }
     }
 
@@ -92,7 +95,7 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
      * @param int $offset
      * @return array
      */
-    protected function getBits($value, $offset = 0)
+    protected function getBits(string $value, int $offset = 0): array
     {
         $bits = [];
 
@@ -118,7 +121,7 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
      *
      * @return int
      */
-    protected function hash($value, $index)
+    protected function hash(string $value, int $index)
     {
         return $this->hash->generate($value . $index) % $this->bitSize;
     }
@@ -133,7 +136,7 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
      * @param float $falsePositiveProbability
      * @return int
      */
-    protected function getOptimalBitSize($setSize, $falsePositiveProbability = 0.001)
+    protected function getOptimalBitSize(int $setSize, float $falsePositiveProbability = 0.001): int
     {
         return (int) round((($setSize * log($falsePositiveProbability)) / pow(log(2), 2)) * -1);
     }
@@ -148,7 +151,7 @@ abstract class BloomFilterAbstract implements BloomFilterInterface
      * @param int $bitSize
      * @return int
      */
-    protected function getOptimalHashCount($setSize, $bitSize)
+    protected function getOptimalHashCount(int $setSize, int $bitSize): int
     {
         return (int) round(($bitSize / $setSize) * log(2));
     }

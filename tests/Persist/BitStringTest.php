@@ -2,9 +2,10 @@
 
 namespace RocketLabs\BloomFilter\Test\Persist;
 
+use PHPUnit\Framework\TestCase;
 use RocketLabs\BloomFilter\Persist\BitString;
 
-class BitStringTest extends \PHPUnit_Framework_TestCase
+class BitStringTest extends TestCase
 {
     /**
      * @test
@@ -19,8 +20,8 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
         $propertyBytes->setAccessible(true);
         $propertySize->setAccessible(true);
 
-        $this->assertEquals(BitString::DEFAULT_BYTE_SIZE, $propertySize->getValue($persister));
-        $this->assertEquals(BitString::DEFAULT_BYTE_SIZE, strlen($propertyBytes->getValue($persister)));
+        static::assertEquals(BitString::DEFAULT_BYTE_SIZE, $propertySize->getValue($persister));
+        static::assertEquals(BitString::DEFAULT_BYTE_SIZE, strlen($propertyBytes->getValue($persister)));
     }
 
     /**
@@ -30,7 +31,7 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
     {
         $persister = new BitString();
         $persister->set(100);
-        $this->assertEquals(1, $persister->get(100));
+        static::assertEquals(1, $persister->get(100));
 
         $allNotSetBitsAreOff = true;
 
@@ -41,7 +42,7 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
             $allNotSetBitsAreOff = $persister->get($i) == 0 && $allNotSetBitsAreOff;
         }
 
-        $this->assertTrue($allNotSetBitsAreOff);
+        static::assertTrue($allNotSetBitsAreOff);
 
     }
 
@@ -57,12 +58,12 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
             $allNotSetBitsAreOff = $persister->get($i) == 0 && $allNotSetBitsAreOff;
         }
 
-        $this->assertTrue($allNotSetBitsAreOff);
+        static::assertTrue($allNotSetBitsAreOff);
     }
 
     /**
      * @test
-     * @expectedException \RangeException
+     * @expectedException \LogicException
      */
     public function setNegativeBit()
     {
@@ -72,7 +73,7 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
-     * @expectedException \UnexpectedValueException
+     * @expectedException \TypeError
      */
     public function getWrongBitValue()
     {
@@ -90,7 +91,7 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
         $persister->setBulk($bits);
 
         foreach ($bits as $bit) {
-            $this->assertEquals(1, $persister->get($bit));
+            static::assertEquals(1, $persister->get($bit));
         }
     }
 
@@ -103,7 +104,7 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
         $persister = new BitString();
         $persister->setBulk($bits);
 
-        $this->assertEquals([1, 1, 1, 1, 0], $persister->getBulk(array_merge($bits, [512])));
+        static::assertEquals([1, 1, 1, 1, 0], $persister->getBulk(array_merge($bits, [512])));
     }
 
     /**
@@ -132,8 +133,8 @@ class BitStringTest extends \PHPUnit_Framework_TestCase
          }
 
 
-        $this->assertTrue($allNotSetBitsAreOff);
-        $this->assertEquals($increasedSize, $propertySize->getValue($persister));
-        $this->assertEquals($increasedSize, strlen($propertyBytes->getValue($persister)));
+        static::assertTrue($allNotSetBitsAreOff);
+        static::assertEquals($increasedSize, $propertySize->getValue($persister));
+        static::assertEquals($increasedSize, strlen($propertyBytes->getValue($persister)));
     }
 }

@@ -9,19 +9,19 @@ interface BloomFilterInterface
 {
     /**
      * @param string $value
-     * @return $this
+     * @return BloomFilterInterface
      */
-    public function add($value);
+    public function add(string $value): BloomFilterInterface;
 
     /**
-     * @param string[] $valueList
-     * @return $this
+     * @param array $valueList
+     * @return BloomFilterInterface
      */
-    public function addBulk(array $valueList);
+    public function addBulk(array $valueList): BloomFilterInterface;
 
     /**
      * @param string $value
      * @return bool
      */
-    public function has($value);
+    public function has(string $value): bool;
 }

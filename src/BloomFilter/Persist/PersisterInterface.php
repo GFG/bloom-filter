@@ -11,13 +11,13 @@ interface PersisterInterface
      * @param array $bits
      * @return int[]
      */
-    public function getBulk(array $bits);
+    public function getBulk(array $bits): array;
 
     /**
      * @param int $bit
      * @return int
      */
-    public function get($bit);
+    public function get(int $bit): int;
 
     /**
      * @param array $bits
@@ -29,6 +29,6 @@ interface PersisterInterface
      * @param int $bit
      * @return void
      */
-    public function set($bit);
+    public function set(int $bit);
 
 }

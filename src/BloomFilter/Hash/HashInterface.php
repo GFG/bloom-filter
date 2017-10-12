@@ -11,5 +11,5 @@ interface HashInterface
      * @param $value
      * @return string
      */
-    public function generate($value);
+    public function generate(string $value): string;
 }

@@ -10,7 +10,7 @@ class Murmur implements HashInterface
     /**
      * @inheritdoc
      */
-    public function generate($value)
+    public function generate(string $value): string
     {
         $value  = array_values(unpack('C*',(string) $value));
         $klen = count($value);

@@ -2,6 +2,8 @@
 
 namespace RocketLabs\BloomFilter;
 
+use RocketLabs\BloomFilter\Exception\CannotRestore;
+
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
@@ -11,10 +13,11 @@ class DynamicBloomFilter extends BloomFilterAbstract implements RestorableInterf
     protected $currentSetSize = 0;
 
     /**
-     * @param $currentSetSize
-     * @return $this
+     * @param int $currentSetSize
+     *
+     * @return BloomFilterInterface
      */
-    public function setCurrentSetSize($currentSetSize)
+    public function setCurrentSetSize(int $currentSetSize): BloomFilterInterface
     {
         $this->currentSetSize = $currentSetSize;
 
@@ -24,18 +27,19 @@ class DynamicBloomFilter extends BloomFilterAbstract implements RestorableInterf
     /**
      * @inheritdoc
      */
-    public function add($value)
+    public function add(string $value): BloomFilterInterface
     {
         $this->assertInit();
         $this->currentSetSize++;
         $this->persister->setBulk($this->getBits($value, floor($this->currentSetSize / $this->setSize)));
+
         return $this;
     }
 
     /**
      * @inheritdoc
      */
-    public function addBulk(array $valueList)
+    public function addBulk(array $valueList): BloomFilterInterface
     {
         $this->assertInit();
         $bits = [];
@@ -51,7 +55,7 @@ class DynamicBloomFilter extends BloomFilterAbstract implements RestorableInterf
     /**
      * @inheritdoc
      */
-    public function has($value)
+    public function has(string $value): bool
     {
         $this->assertInit();
         $bloomFilterCount = floor($this->currentSetSize / $this->setSize);
@@ -113,19 +117,19 @@ class DynamicBloomFilter extends BloomFilterAbstract implements RestorableInterf
     private function checkIntegrity(Memento $memento)
     {
         if ($memento->getHashClass() != get_class($this->hash)) {
-            throw new \RuntimeException('wrong hash class');
+            throw new CannotRestore('Memento object should have same hash class as object');
         }
 
         if ($memento->getParam('set_size') === null) {
-            throw new \RuntimeException('Memento object has not "set_size" parameter');
+            throw new CannotRestore('Memento object has not "set_size" parameter');
         }
 
         if ($memento->getParam('probability') === null) {
-            throw new \RuntimeException('Memento object has not "probability" parameter');
+            throw new CannotRestore('Memento object has not "probability" parameter');
         }
 
         if ($memento->getParam('current_set_size') === null) {
-            throw new \RuntimeException('Memento object has not "current_set_size" parameter');
+            throw new CannotRestore('Memento object has not "current_set_size" parameter');
         }
     }
 }

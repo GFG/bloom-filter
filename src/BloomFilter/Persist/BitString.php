@@ -2,6 +2,8 @@
 
 namespace RocketLabs\BloomFilter\Persist;
 
+use RocketLabs\BloomFilter\Exception\InvalidValue;
+
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
@@ -35,7 +37,7 @@ class BitString implements PersisterInterface
     /**
      * @inheritdoc
      */
-    public function getBulk(array $bits)
+    public function getBulk(array $bits): array
     {
         $resultBits = [];
         foreach ($bits as $bit) {
@@ -58,7 +60,7 @@ class BitString implements PersisterInterface
     /**
      * @inheritdoc
      */
-    public function get($bit)
+    public function get(int $bit): int
     {
         $byte = $this->offsetToByte($bit);
         $byte = ord($this->bytes[$byte]);
@@ -69,7 +71,7 @@ class BitString implements PersisterInterface
     /**
      * @inheritdoc
      */
-    public function set($bit)
+    public function set(int $bit)
     {
         $offsetByte = $this->offsetToByte($bit);
         $byte = ord($this->bytes[$offsetByte]);
@@ -81,14 +83,10 @@ class BitString implements PersisterInterface
     /**
      * @param int $value
      */
-    private function assertOffset($value)
+    private function assertOffset(int $value)
     {
-        if (!is_numeric($value)) {
-            throw new \UnexpectedValueException('Value must be an integer.');
-        }
-
         if ($value < 0) {
-            throw new \RangeException('Value must be greater than zero.');
+            throw new InvalidValue('Value must be greater than zero.');
         }
     }
 
@@ -96,7 +94,7 @@ class BitString implements PersisterInterface
      * @param int $offset
      * @return int
      */
-    private function offsetToByte($offset)
+    private function offsetToByte(int $offset): int
     {
         $this->assertOffset($offset);
         $byte = $offset >> 0x3;
@@ -112,7 +110,7 @@ class BitString implements PersisterInterface
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->bytes;
     }
