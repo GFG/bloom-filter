@@ -3,13 +3,15 @@
 namespace RocketLabs\BloomFilter\Persist;
 
 use RocketLabs\BloomFilter\Exception\InvalidValue;
+use RocketLabs\BloomFilter\Exception\MaxLimitPerBitReached;
 
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-class BitString implements BitPersister
+class CountString15 implements CountPersister
 {
     const DEFAULT_BYTE_SIZE = 1024;
+    const MAX_AMOUNT_PER_BIT = 15;
 
     /** @var string */
     private $bytes;
@@ -18,7 +20,7 @@ class BitString implements BitPersister
 
     /**
      * @param string $str
-     * @return BitString
+     * @return CountString15
      */
     public static function createFromString($str)
     {
@@ -43,69 +45,88 @@ class BitString implements BitPersister
         $this->bytes = str_repeat(chr(0), $this->size);
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function getBulk(array $bits): array
+    public function incrementBulk(array $bits): array
     {
-        $resultBits = [];
+        $result = [];
+
         foreach ($bits as $bit) {
-            $resultBits[] = $this->get($bit);
+            $result[$bit] = $this->incrementBit($bit);
         }
 
-        return $resultBits;
+        return $result;
     }
 
     /**
-     * @inheritdoc
+     * @param int $bit
+     * @return int
      */
-    public function unsetBulk(array $bits)
-    {
-        foreach ($bits as $bit) {
-            $this->unset($bit);
-        }
-    }
-
-    public function unset(int $bit)
+    public function incrementBit(int $bit): int
     {
         $offsetByte = $this->offsetToByte($bit);
         $byte = ord($this->bytes[$offsetByte]);
 
-        $byte &= ~(1 << $bit % 8);
-        $this->bytes[$offsetByte] = chr($byte);
-    }
+        $low = $byte & 0x0F;
+        $high = ($byte >> 4) & 0x0F;
 
-    /**
-     * @inheritdoc
-     */
-    public function setBulk(array $bits)
-    {
-        foreach ($bits as $bit) {
-            $this->set($bit);
+        if ($bit & 1) {
+            $return = ++$high;
+        } else {
+            $return = ++$low;
         }
+
+        if ($low > self::MAX_AMOUNT_PER_BIT || $high > self::MAX_AMOUNT_PER_BIT) {
+            throw new MaxLimitPerBitReached('max amount per bit should not be higher than ' . self::MAX_AMOUNT_PER_BIT);
+        }
+
+        $this->bytes[$offsetByte] = chr($low | ($high << 4));
+
+        return $return;
     }
 
     /**
-     * @inheritdoc
+     * @param int $bit
+     * @return int
      */
     public function get(int $bit): int
     {
-        $byte = $this->offsetToByte($bit);
-        $byte = ord($this->bytes[$byte]);
+        $offsetByte = $this->offsetToByte($bit);
+        $byte = ord($this->bytes[$offsetByte]);
 
-        return ($byte >> $bit % 8) & 1;
+        $low = $byte & 0x0F;
+        $high = ($byte >> 4) & 0x0F;
+
+        if ($bit & 1) {
+            return $high;
+        } else {
+            return $low;
+        }
     }
 
     /**
-     * @inheritdoc
+     * @param int $bit
+     * @return int
      */
-    public function set(int $bit)
+    public function decrementBit(int $bit): int
     {
         $offsetByte = $this->offsetToByte($bit);
         $byte = ord($this->bytes[$offsetByte]);
 
-        $byte |= 1 << $bit % 8;
-        $this->bytes[$offsetByte] = chr($byte);
+        $low = $byte & 0x0F;
+        $high = ($byte >> 4) & 0x0F;
+
+        if ($bit & 1) {
+            $return = --$high;
+        } else {
+            $return = --$low;
+        }
+
+        if ($low > self::MAX_AMOUNT_PER_BIT || $high > self::MAX_AMOUNT_PER_BIT) {
+            throw new MaxLimitPerBitReached('max amount per bit should not be higher than ' . self::MAX_AMOUNT_PER_BIT);
+        }
+
+        $this->bytes[$offsetByte] = chr(max([$low, 0]) | (max([$high, 0]) << 4));
+
+        return max([$return, 0]);
     }
 
     /**
@@ -124,8 +145,8 @@ class BitString implements BitPersister
      */
     private function offsetToByte(int $offset): int
     {
-        $this->assertOffset($offset);
-        $byte = $offset >> 0x3;
+         $this->assertOffset($offset);
+         $byte = $offset / 2;
 
         if ($this->size <= $byte) {
             $this->bytes .= str_repeat(chr(0), $byte - $this->size + self::DEFAULT_BYTE_SIZE);

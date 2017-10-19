@@ -2,19 +2,17 @@
 
 namespace RocketLabs\BloomFilter;
 
-use RocketLabs\BloomFilter\Exception\CannotRestore;
 
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-class BloomFilter extends BloomFilterAbstract implements RestorableInterface
+final class BloomFilter extends BloomFilterAbstract
 {
     /**
      * @inheritdoc
      */
-    public function add(string $value)
+    protected function doAdd(string $value)
     {
-        $this->assertInit();
         $this->persister->setBulk($this->getBits($value));
 
         return $this;
@@ -23,9 +21,8 @@ class BloomFilter extends BloomFilterAbstract implements RestorableInterface
     /**
      * @inheritdoc
      */
-    public function addBulk(array $valueList)
+    protected function doAddBulk(array $valueList)
     {
-        $this->assertInit();
         $bits = [];
         foreach ($valueList as $value) {
             $bits[] = $this->getBits($value);
@@ -39,55 +36,10 @@ class BloomFilter extends BloomFilterAbstract implements RestorableInterface
     /**
      * @inheritdoc
      */
-    public function has(string $value): bool
+    protected function doHas(string $value): bool
     {
-        $this->assertInit();
         $bits = $this->persister->getBulk($this->getBits($value));
 
         return !in_array(0, $bits);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function saveState(): Memento
-    {
-        $this->assertInit();
-        $memento = new Memento();
-        $memento->setHashClass(get_class($this->hash))
-            ->addParam('set_size', $this->setSize)
-            ->addParam('probability', $this->falsePositiveProbability);
-
-        return $memento;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function restoreState(Memento $memento)
-    {
-        $this->checkIntegrity($memento);
-        $this->setSize($memento->getParam('set_size'));
-        $this->setFalsePositiveProbability($memento->getParam('probability'));
-        $this->bitSize = $this->getOptimalBitSize($this->setSize, $this->falsePositiveProbability);
-        $this->hashCount = $this->getOptimalHashCount($this->setSize, $this->bitSize);
-    }
-
-    /**
-     * @param Memento $memento
-     */
-    private function checkIntegrity(Memento $memento)
-    {
-        if ($memento->getHashClass() != get_class($this->hash)) {
-            throw new CannotRestore('Memento object should have same hash class as object');
-        }
-
-        if ($memento->getParam('set_size') === null) {
-            throw new CannotRestore('Memento object has not "set_size" parameter');
-        }
-
-        if ($memento->getParam('probability') === null) {
-            throw new CannotRestore('Memento object has not "probability" parameter');
-        }
     }
 }

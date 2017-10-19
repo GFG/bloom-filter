@@ -4,8 +4,8 @@ namespace RocketLabs\BloomFilter\Test\Hash;
 
 use PHPUnit\Framework\TestCase;
 use RocketLabs\BloomFilter\DynamicBloomFilter;
-use RocketLabs\BloomFilter\Hash\HashInterface;
-use RocketLabs\BloomFilter\Persist\PersisterInterface;
+use RocketLabs\BloomFilter\Hash\Hash;
+use RocketLabs\BloomFilter\Persist\BitPersister;
 
 class DynamicBloomFilterTest extends TestCase
 {
@@ -15,8 +15,8 @@ class DynamicBloomFilterTest extends TestCase
      */
     public function addToDynamicFilter()
     {
-        $persister = $this->getMockBuilder(PersisterInterface::class)->getMock();
-        $hash = $this->getMockBuilder(HashInterface::class)->getMock();
+        $persister = $this->getMockBuilder(BitPersister::class)->getMock();
+        $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
             ->willReturn(2);
@@ -51,8 +51,8 @@ class DynamicBloomFilterTest extends TestCase
      */
     public function existsInFilter()
     {
-        $persister = $this->getMockBuilder(PersisterInterface::class)->getMock();
-        $hash = $this->getMockBuilder(HashInterface::class)->getMock();
+        $persister = $this->getMockBuilder(BitPersister::class)->getMock();
+        $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
             ->willReturn(2);
@@ -74,8 +74,8 @@ class DynamicBloomFilterTest extends TestCase
      */
     public function suspendRestoreFilter()
     {
-        $persister = $this->getMockBuilder(PersisterInterface::class)->getMock();
-        $hash = $this->getMockBuilder(HashInterface::class)->getMock();
+        $persister = $this->getMockBuilder(BitPersister::class)->getMock();
+        $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
             ->willReturn(2);
@@ -102,8 +102,8 @@ class DynamicBloomFilterTest extends TestCase
      */
     public function doesNotExistsInFilter()
     {
-        $persister = $this->getMockBuilder(PersisterInterface::class)->getMock();
-        $hash = $this->getMockBuilder(HashInterface::class)->getMock();
+        $persister = $this->getMockBuilder(BitPersister::class)->getMock();
+        $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
             ->willReturn(2);

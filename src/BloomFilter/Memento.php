@@ -5,7 +5,7 @@ namespace RocketLabs\BloomFilter;
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-class Memento
+final class Memento
 {
     /** @var  string */
     private $hashClass;
@@ -45,8 +45,7 @@ class Memento
 
     /**
      * @param string $key
-     * @return mixed
-     * @throws \Exception
+     * @return mixed|null
      */
     public function getParam(string $key)
     {

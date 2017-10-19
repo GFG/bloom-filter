@@ -2,17 +2,17 @@
 
 namespace RocketLabs\BloomFilter\Persist;
 
-use RocketLabs\BloomFilter\Exception\InvalidValue;
+use RocketLabs\BloomFilter\Exception\InvalidCounter;
 
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-class Redis implements PersisterInterface
+class CountRedis implements CountPersister
 {
     const DEFAULT_HOST = 'localhost';
     const DEFAULT_PORT = 6379;
     const DEFAULT_DB = 0;
-    const DEFAULT_KEY = 'bloom_filter';
+    const DEFAULT_KEY = 'counting_bloom_filter';
     /** @var string */
     protected $key;
     /** @var \Redis */
@@ -20,7 +20,7 @@ class Redis implements PersisterInterface
 
     /**
      * @param array $params
-     * @return Redis
+     * @return CountRedis
      */
     public static function create(array $params = [])
     {
@@ -57,62 +57,61 @@ class Redis implements PersisterInterface
     }
 
     /**
-     * @inheritdoc
+     * @param int $bit
+     * @return int
      */
-    public function getBulk(array $bits): array
+    public function decrementBit(int $bit): int
     {
-        $pipe = $this->redis->pipeline();
-
-        foreach ($bits as $bit) {
-            $this->assertOffset($bit);
-            $pipe->getBit($this->key, $bit);
+        $result = $this->redis->hIncrBy($this->key, $bit, -1);
+        if ($result < 0) {
+            $this->redis->hSet($this->key, $bit, 0);
+            throw new InvalidCounter(
+                sprintf(
+                    'Redis key [%s] had invalid count[%s] for the bit [%s]. Has been set to 0',
+                    $this->key,
+                    $result,
+                    $bit
+                )
+            );
         }
 
-        return $pipe->exec();
+        return max([0, $result ]);
     }
 
     /**
-     * @inheritdoc
+     * @param int $bit
+     * @return int
      */
-    public function setBulk(array $bits)
+    public function incrementBit(int $bit): int
+    {
+        return $this->redis->hIncrBy($this->key, $bit, 1);
+    }
+
+    /**
+     * @param array $bits
+     * @return array
+     */
+    public function incrementBulk(array $bits): array
     {
         $pipe = $this->redis->pipeline();
 
+        $result = [];
+
         foreach ($bits as $bit) {
-            $this->assertOffset($bit);
-            $pipe->setBit($this->key, $bit, 1);
+            $result[$bit] = $pipe->hIncrBy($this->key, $bit, 1);
         }
 
         $pipe->exec();
+
+        return $result;
     }
 
     /**
-     * @inheritdoc
+     * @param int $bit
+     * @return int
      */
     public function get(int $bit): int
     {
-        $this->assertOffset($bit);
-        return $this->redis->getBit($this->key, $bit);
+        return $this->redis->hGet($this->key, $bit);
     }
-
-    /**
-     * @inheritdoc
-     */
-    public function set(int $bit)
-    {
-        $this->assertOffset($bit);
-        $this->redis->setBit($this->key, $bit, 1);
-    }
-
-    /**
-     * @param int $value
-     */
-    private function assertOffset(int $value)
-    {
-        if ($value < 0) {
-            throw new InvalidValue('Value must be greater than zero.');
-        }
-    }
-
-
 }
