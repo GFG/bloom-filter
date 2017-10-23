@@ -14,7 +14,7 @@ class BitStringTest extends TestCase
     {
         $persister = new BitString();
 
-        $class = new \ReflectionClass("RocketLabs\\BloomFilter\\Persist\\BitString");
+        $class = new \ReflectionClass(BitString::class);
         $propertyBytes = $class->getProperty("bytes");
         $propertySize = $class->getProperty("size");
         $propertyBytes->setAccessible(true);
@@ -44,6 +44,20 @@ class BitStringTest extends TestCase
 
         static::assertTrue($allNotSetBitsAreOff);
 
+    }
+
+    /**
+     * @test
+     */
+    public function unsetBit()
+    {
+        $persister = new BitString();
+        $persister->set(100);
+        static::assertEquals(1, $persister->get(100));
+        $persister->unset(99);
+        static::assertEquals(1, $persister->get(100));
+        $persister->unset(100);
+        static::assertEquals(0, $persister->get(100));
     }
 
     /**
@@ -98,6 +112,21 @@ class BitStringTest extends TestCase
     /**
      * @test
      */
+    public function unsetBits()
+    {
+        $bits = [2, 16, 250, 1024];
+        $persister = new BitString();
+        $persister->setBulk($bits);
+        $persister->unsetBulk($bits);
+
+        foreach ($bits as $bit) {
+            static::assertEquals(0, $persister->get($bit));
+        }
+    }
+
+    /**
+     * @test
+     */
     public function reset()
     {
         $bits = [2, 16, 250, 1024];
@@ -129,7 +158,7 @@ class BitStringTest extends TestCase
     {
         $persister = new BitString();
 
-        $class = new \ReflectionClass("RocketLabs\\BloomFilter\\Persist\\BitString");
+        $class = new \ReflectionClass(BitString::class);
         $propertyBytes = $class->getProperty("bytes");
         $propertySize = $class->getProperty("size");
         $propertyBytes->setAccessible(true);

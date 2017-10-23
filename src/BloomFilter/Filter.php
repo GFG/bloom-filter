@@ -5,7 +5,7 @@ namespace RocketLabs\BloomFilter;
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-interface BloomFilterInterface
+interface Filter
 {
     /**
      * @param string $value

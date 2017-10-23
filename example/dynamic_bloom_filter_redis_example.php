@@ -1,8 +1,7 @@
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use RocketLabs\BloomFilter\Persist\Redis;
-use RocketLabs\BloomFilter\BloomFilter;
+use RocketLabs\BloomFilter\Persist\BitRedis;
 use RocketLabs\BloomFilter\DynamicBloomFilter;
 use RocketLabs\BloomFilter\Hash\Murmur;
 use RocketLabs\BloomFilter\Persist\BitString;
@@ -21,7 +20,7 @@ while (($data = fgetcsv($handle) ) !== false) {
     $messages[] = $data[0];
 }
 
-$redisDynamicBloomFilter = new DynamicBloomFilter(Redis::create(['key' => REDIS_KEY]), new Murmur());
+$redisDynamicBloomFilter = new DynamicBloomFilter(BitRedis::create(['key' => REDIS_KEY]), new Murmur());
 $redisDynamicBloomFilter->setSize(200);
 
 $bitString = new BitString();
@@ -46,7 +45,7 @@ if (!$redisDynamicBloomFilter->has('new message')) {
 $mementoRedisPersister = $redisDynamicBloomFilter->saveState();
 
 //Restoring
-$restoredDynamicBloomFilter = new DynamicBloomFilter(Redis::create(['key' => REDIS_KEY]), new Murmur());
+$restoredDynamicBloomFilter = new DynamicBloomFilter(BitRedis::create(['key' => REDIS_KEY]), new Murmur());
 $restoredDynamicBloomFilter->restoreState($mementoRedisPersister);
 
 //Checking

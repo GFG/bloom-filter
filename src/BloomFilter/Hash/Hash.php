@@ -5,7 +5,7 @@ namespace RocketLabs\BloomFilter\Hash;
 /**
  * @author Igor Veremchuk igor.veremchuk@rocket-internet.de
  */
-interface HashInterface
+interface Hash
 {
     /**
      * @param $value
