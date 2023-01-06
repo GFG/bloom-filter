@@ -3,6 +3,7 @@
 namespace RocketLabs\BloomFilter\Test\Persist;
 
 use PHPUnit\Framework\TestCase;
+use RocketLabs\BloomFilter\Exception\InvalidCounter;
 use RocketLabs\BloomFilter\Persist\CountRedis;
 
 class CountRedisTest extends TestCase
@@ -70,6 +71,9 @@ class CountRedisTest extends TestCase
             ->with(CountRedis::DEFAULT_KEY, 100, 0);
         /** @var \Redis $redisMock */
         $persister = new CountRedis($redisMock, CountRedis::DEFAULT_KEY);
+
+        $this->expectException(InvalidCounter::class);
+
         self::assertEquals(0, $persister->decrementBit(100));
     }
 

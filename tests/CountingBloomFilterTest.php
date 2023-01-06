@@ -32,7 +32,7 @@ class CountingBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->exactly(3))
             ->method('generate')
-            ->will($this->onConsecutiveCalls(42, 1000, 10048));
+            ->will($this->onConsecutiveCalls('42', '1000', '10048'));
 
 
 
@@ -62,7 +62,7 @@ class CountingBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->exactly(3))
             ->method('generate')
-            ->will($this->onConsecutiveCalls(42, 1000, 10048));
+            ->will($this->onConsecutiveCalls('42', '1000', '10048'));
 
 
 
@@ -80,7 +80,7 @@ class CountingBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->exactly(9))
             ->method('generate')
-            ->will($this->onConsecutiveCalls(42, 43, 44, 1, 2, 3, 10001, 10002, 10003));
+            ->will($this->onConsecutiveCalls('42', '43', '44', '1', '2', '3', '10001', '10002', '10003'));
 
         $bitPersister->expects($this->once())
             ->method('unsetBulk')
@@ -112,7 +112,7 @@ class CountingBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->exactly(9))
             ->method('generate')
-            ->will( $this->onConsecutiveCalls(42, 43, 44, 1, 2, 3, 10001, 10002, 10003));
+            ->will( $this->onConsecutiveCalls('42', '43', '44', '1', '2', '3', '10001', '10002', '10003'));
 
         $bitPersister->expects($this->once())
             ->method('setBulk')
@@ -145,7 +145,7 @@ class CountingBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
-            ->will( $this->onConsecutiveCalls(42, 1000, 10001, 42, 1000, 10001));
+            ->will( $this->onConsecutiveCalls('42', '1000', '10001', '42', '1000', '10001'));
 
         $persister->expects($this->once())
             ->method('setBulk')
@@ -177,7 +177,7 @@ class CountingBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
-            ->will( $this->onConsecutiveCalls(42, 1000, 10001, 42, 1000, 10001));
+            ->will( $this->onConsecutiveCalls('42', '1000', '10001', '42', '1000', '10001'));
 
         $persister->expects($this->once())
             ->method('setBulk')
@@ -226,7 +226,7 @@ class CountingBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->exactly(6))
             ->method('generate')
-            ->will( $this->onConsecutiveCalls(42, 1000, 10048, 43, 1001, 10049));
+            ->will( $this->onConsecutiveCalls('42', '1000', '10048', '43', '1001', '10049'));
 
         $filterForSet = new CountingBloomFilter($persister, $countPersister, $hash);
         $filterForSet->setSize(1024)->setFalsePositiveProbability(0.1);

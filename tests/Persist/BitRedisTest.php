@@ -3,6 +3,7 @@
 namespace RocketLabs\BloomFilter\Test\Persist;
 
 use PHPUnit\Framework\TestCase;
+use RocketLabs\BloomFilter\Exception\InvalidValue;
 use RocketLabs\BloomFilter\Persist\BitRedis;
 
 class BitRedisTest extends TestCase
@@ -55,39 +56,44 @@ class BitRedisTest extends TestCase
 
     /**
      * @test
-     * @expectedException \LogicException
      */
     public function setNegativeBit()
     {
         $redisMock = $this->getMockBuilder(\Redis::class)->getMock();
         /** @var \Redis $redisMock */
         $persister = new BitRedis($redisMock, BitRedis::DEFAULT_KEY);
+
+        $this->expectException(InvalidValue::class);
+
         $persister->set(-1);
     }
 
     /**
      * @test
-     * @expectedException \LogicException
      */
     public function getNegativeBit()
     {
         $redisMock = $this->getMockBuilder(\Redis::class)->getMock();
         /** @var \Redis $redisMock */
         $persister = new BitRedis($redisMock, BitRedis::DEFAULT_KEY);
-        $persister->set(-1);
-        $persister->set(-1);
+
+        $this->expectException(InvalidValue::class);
+
+        $persister->get(-1);
 
     }
 
     /**
      * @test
-     * @expectedException \TypeError
      */
     public function getWrongBitValue()
     {
         $redisMock = $this->getMockBuilder(\Redis::class)->getMock();
         /** @var \Redis $redisMock */
         $persister = new BitRedis($redisMock, BitRedis::DEFAULT_KEY);
+
+        $this->expectException(\TypeError::class);
+
         $persister->set('test');
     }
 

@@ -3,7 +3,9 @@
 namespace RocketLabs\BloomFilter\Test\Persist;
 
 use PHPUnit\Framework\TestCase;
+use RocketLabs\BloomFilter\Exception\InvalidValue;
 use RocketLabs\BloomFilter\Persist\BitString;
+use TypeError;
 
 class BitStringTest extends TestCase
 {
@@ -77,21 +79,25 @@ class BitStringTest extends TestCase
 
     /**
      * @test
-     * @expectedException \LogicException
      */
     public function setNegativeBit()
     {
         $persister = new BitString();
+
+        $this->expectException(InvalidValue::class);
+
         $persister->set(-1);
     }
 
     /**
      * @test
-     * @expectedException \TypeError
      */
     public function getWrongBitValue()
     {
         $persister = new BitString();
+
+        $this->expectException(TypeError::class);
+
         $persister->set('test');
     }
 

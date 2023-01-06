@@ -3,6 +3,7 @@
 namespace RocketLabs\BloomFilter\Test\Persist;
 
 use PHPUnit\Framework\TestCase;
+use RocketLabs\BloomFilter\Exception\MaxLimitPerBitReached;
 use RocketLabs\BloomFilter\Persist\CountString15;
 
 class CountStringTest extends TestCase
@@ -59,11 +60,13 @@ class CountStringTest extends TestCase
 
     /**
      * @test
-     * @expectedException  \RuntimeException
      */
     public function incrementOverflow()
     {
         $persister = new CountString15();
+
+        $this->expectException(MaxLimitPerBitReached::class);
+
         for ($i = 0; $i < 16; $i++) {
             $persister->incrementBit(42);
         }

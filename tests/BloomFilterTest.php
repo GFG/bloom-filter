@@ -4,6 +4,7 @@ namespace RocketLabs\BloomFilter\Test\Hash;
 
 use PHPUnit\Framework\TestCase;
 use RocketLabs\BloomFilter\BloomFilter;
+use RocketLabs\BloomFilter\Exception\NotInitialized;
 use RocketLabs\BloomFilter\Hash\Hash;
 use RocketLabs\BloomFilter\Hash\Murmur;
 use RocketLabs\BloomFilter\Persist\BitPersister;
@@ -81,7 +82,7 @@ class BloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->exactly(3))
             ->method('generate')
-            ->will($this->onConsecutiveCalls(42, 1000, 10048));
+            ->will($this->onConsecutiveCalls('42', '1000', '10048'));
 
         $persister->expects($this->once())
             ->method('setBulk')
@@ -95,7 +96,6 @@ class BloomFilterTest extends TestCase
 
     /**
      * @test
-     * @expectedException \LogicException
      */
     public function filterHasNotBeenInitialized()
     {
@@ -108,6 +108,7 @@ class BloomFilterTest extends TestCase
         $persister->expects($this->never())
             ->method('setBulk');
 
+        $this->expectException(NotInitialized::class);
 
         $filter = new BloomFilter($persister, $hash);
         $filter->add('testString');
@@ -122,7 +123,7 @@ class BloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->exactly(9))
             ->method('generate')
-            ->will( $this->onConsecutiveCalls(42, 43, 44, 1, 2, 3, 10001, 10002, 10003));
+            ->will( $this->onConsecutiveCalls('42', '43', '44', '1', '2', '3', '10001', '10002', '10003'));
 
         $persister->expects($this->once())
             ->method('setBulk')
@@ -149,7 +150,7 @@ class BloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
-            ->will( $this->onConsecutiveCalls(42, 1000, 10001, 42, 1000, 10001));
+            ->will( $this->onConsecutiveCalls('42', '1000', '10001', '42', '1000', '10001'));
 
         $persister->expects($this->once())
             ->method('setBulk')
@@ -179,7 +180,7 @@ class BloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
-            ->will( $this->onConsecutiveCalls(42, 1000, 10001, 42, 1000, 10001));
+            ->will( $this->onConsecutiveCalls('42', '1000', '10001', '42', '1000', '10001'));
 
         $persister->expects($this->once())
             ->method('setBulk')
@@ -218,7 +219,7 @@ class BloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->exactly(6))
             ->method('generate')
-            ->will( $this->onConsecutiveCalls(42, 1000, 10048, 43, 1001, 10049));
+            ->will( $this->onConsecutiveCalls('42', '1000', '10048', '43', '1001', '10049'));
 
         $filterForSet = new BloomFilter($persister, $hash);
         $filterForSet->setSize(1024)->setFalsePositiveProbability(0.1);
