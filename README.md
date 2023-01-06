@@ -1,3 +1,8 @@
+# Warning!
+
+Php 8 support is experimental.
+
+
 # PHP Bloom Filter
 
 A Bloom filter is a space-efficient probabilistic data structure, conceived by Burton Howard Bloom in 1970,

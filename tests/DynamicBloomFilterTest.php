@@ -19,25 +19,23 @@ class DynamicBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
-            ->willReturn(2);
+            ->willReturn('2');
 
-        $persister->expects($this->at(0))
+        $persister->expects($this->exactly(10))
             ->method('setBulk')
-            ->willReturn(1)
-            ->with([2, 2, 2]); //calculated bits for hashes
-
-        $persister->expects($this->at(3))
-            ->method('setBulk')
-            ->willReturn(1)
-            ->with([16, 16, 16]); //calculated bits for hashes
-        $persister->expects($this->at(6))
-            ->method('setBulk')
-            ->willReturn(1)
-            ->with([30, 30, 30]); //calculated bits for hashes
-        $persister->expects($this->at(9))
-            ->method('setBulk')
-            ->willReturn(1)
-            ->with([44, 44, 44]); //calculated bits for hashes
+            ->withConsecutive(
+                [[2, 2, 2]],
+                    [[2, 2, 2]],
+                    [[16, 16, 16]],
+                    [[16, 16, 16]],
+                    [[16, 16, 16]],
+                    [[30, 30, 30]],
+                    [[30, 30, 30]],
+                    [[30, 30, 30]],
+                    [[44, 44, 44]],
+                    [[44, 44, 44]]
+            )
+        ->willReturn(1);
 
         $filter = new DynamicBloomFilter($persister, $hash);
         $filter->setSize(3)->setFalsePositiveProbability(0.1);
@@ -55,7 +53,7 @@ class DynamicBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
-            ->willReturn(2);
+            ->willReturn('2');
 
         $filter = new DynamicBloomFilter($persister, $hash);
         $filter->setSize(3)->setFalsePositiveProbability(0.1);
@@ -63,8 +61,16 @@ class DynamicBloomFilterTest extends TestCase
             $filter->add('testString');
         }
 
-        $persister->expects($this->at(0))->method('getBulk')->willReturn([1, 0, 1])->with([2, 2 , 2]);
-        $persister->expects($this->at(1))->method('getBulk')->willReturn([1, 1, 1])->with([16, 16 , 16]);
+        $persister->expects($this->exactly(2))
+            ->method('getBulk')
+            ->willReturnOnConsecutiveCalls(
+                [1, 0, 1],
+                [1, 1, 1]
+            )
+            ->withConsecutive(
+                [[2, 2, 2]],
+                [[16, 16, 16]]
+            );
 
         static::assertTrue($filter->has('testString'));
     }
@@ -78,7 +84,7 @@ class DynamicBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
-            ->willReturn(2);
+            ->willReturn('2');
 
         $filter = new DynamicBloomFilter($persister, $hash);
         $filter->setSize(3)->setFalsePositiveProbability(0.1);
@@ -86,8 +92,16 @@ class DynamicBloomFilterTest extends TestCase
             $filter->add('testString');
         }
 
-        $persister->expects($this->at(0))->method('getBulk')->willReturn([1, 0, 1])->with([2, 2 , 2]);
-        $persister->expects($this->at(1))->method('getBulk')->willReturn([1, 1, 1])->with([16, 16 , 16]);
+        $persister->expects($this->exactly(2))
+            ->method('getBulk')
+            ->willReturnOnConsecutiveCalls(
+                [1, 0, 1],
+                [1, 1, 1]
+            )
+            ->withConsecutive(
+                [[2, 2, 2]],
+                [[16, 16, 16]]
+            );
 
         $memento = $filter->saveState();
 
@@ -106,7 +120,7 @@ class DynamicBloomFilterTest extends TestCase
         $hash = $this->getMockBuilder(Hash::class)->getMock();
         $hash->expects($this->any())
             ->method('generate')
-            ->willReturn(2);
+            ->willReturn('2');
 
         $filter = new DynamicBloomFilter($persister, $hash);
         $filter->setSize(3)->setFalsePositiveProbability(0.1);
@@ -114,10 +128,20 @@ class DynamicBloomFilterTest extends TestCase
             $filter->add('testString');
         }
 
-        $persister->expects($this->at(0))->method('getBulk')->willReturn([1, 0, 1])->with([2, 2 , 2]);
-        $persister->expects($this->at(1))->method('getBulk')->willReturn([1, 1, 0])->with([16, 16, 16]);
-        $persister->expects($this->at(2))->method('getBulk')->willReturn([1, 1, 0])->with([30, 30, 30]);
-        $persister->expects($this->at(3))->method('getBulk')->willReturn([1, 1, 0])->with([44, 44, 44]);
+        $persister->expects($this->exactly(4))
+            ->method('getBulk')
+            ->willReturnOnConsecutiveCalls(
+                [1, 0, 1],
+                [1, 1, 0],
+                [1, 1, 0],
+                [1, 1, 0]
+            )
+            ->withConsecutive(
+                [[2, 2, 2]],
+                [[16, 16, 16]],
+                [[30, 30, 30]],
+                [[44, 44, 44]]
+            );
 
         static::assertFalse($filter->has('testString'));
     }
