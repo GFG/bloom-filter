@@ -1,0 +1,13 @@
+services:
+  php:
+    user: 1000:1000
+    build:
+      dockerfile: .docker/Dockerfile
+      target: php-dev-base
+      context: .
+    volumes:
+      - ./:/var/app
+      - ~/.composer:/var/.composer
+
+  redis:
+    image: redis:alpine
