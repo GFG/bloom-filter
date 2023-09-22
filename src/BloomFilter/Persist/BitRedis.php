@@ -67,8 +67,9 @@ class BitRedis implements BitPersister
             $this->assertOffset($bit);
             $pipe->getBit($this->key, $bit);
         }
+        $return = $pipe->exec();
 
-        return is_array($return = $pipe->exec()) ? $return : [];
+        return is_array($return) ? $return : [$return];
     }
 
     /**
