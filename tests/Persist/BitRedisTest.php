@@ -121,7 +121,7 @@ class BitRedisTest extends TestCase
 
         $pipeMock->expects($this->once())
             ->method('exec')
-            ->willReturn(1);
+            ->willReturn(false);
         /** @var \Redis $redisMock */
         $persister = new BitRedis($redisMock, BitRedis::DEFAULT_KEY);
         $persister->setBulk($bits);
@@ -150,7 +150,7 @@ class BitRedisTest extends TestCase
 
         $pipeMock->expects($this->once())
             ->method('exec')
-            ->willReturn(1);
+            ->willReturn(false);
         /** @var \Redis $redisMock */
         $persister = new BitRedis($redisMock, BitRedis::DEFAULT_KEY);
         $persister->unsetBulk($bits);
@@ -189,11 +189,11 @@ class BitRedisTest extends TestCase
                 [BitRedis::DEFAULT_KEY, $bits[1]],
                 [BitRedis::DEFAULT_KEY, $bits[2]]
             )
-            ->willReturn([1,1,1]);
+            ->willReturnOnConsecutiveCalls(1,1,1);
 
         $pipeMock->expects($this->once())
             ->method('exec')
-            ->willReturn([1]);
+            ->willReturn(false);
         /** @var \Redis $redisMock */
         $persister = new BitRedis($redisMock, BitRedis::DEFAULT_KEY);
         $persister->getBulk($bits);
